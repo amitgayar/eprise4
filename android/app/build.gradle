@@ -28,6 +28,7 @@ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 apply plugin: 'com.google.gms.google-services'
 
 android {
+    buildToolsVersion "29.0.3"
 //    compileSdkVersion flutter.compileSdkVersion
     compileSdkVersion 31
 

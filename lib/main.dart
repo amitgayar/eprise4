@@ -1,34 +1,19 @@
-// Copyright 2019 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:async';
 import 'dart:convert';
-
-import 'package:eprise4/app_constants/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
 import 'message.dart';
 import 'message_list.dart';
 import 'permissions.dart';
 import 'token_monitor.dart';
-// import 'firebase_options.dart';
 
-/// Define a top-level named handler which background/terminated messages will
-/// call.
-///
-/// To verify things are working, check out the native platform logs.
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // If you're going to use other Firebase services in the background, such as Firestore,
-  // make sure you call `initializeApp` before using other Firebase services.
-  await Firebase.initializeApp(
-    options:DefaultFirebaseOptions.currentPlatform
-  );
+  // await Firebase.initializeApp(
+  //   options:DefaultFirebaseOptions.currentPlatform
+  // );
 }
 
 /// Create a [AndroidNotificationChannel] for heads up notifications
@@ -49,8 +34,6 @@ Future<void> main() async {
       // storageBucket: 'react-native-firebase-testing.appspot.com',
     )
   );
-
-  // Set the background messaging handler early on, as a named top-level function
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   if (!kIsWeb) {
@@ -84,7 +67,7 @@ Future<void> main() async {
   runApp(MyApp());
 }
 
-/// Entry point for the example application.
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
