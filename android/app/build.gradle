@@ -30,7 +30,7 @@ apply plugin: 'com.google.gms.google-services'
 android {
     buildToolsVersion "29.0.3"
 //    compileSdkVersion flutter.compileSdkVersion
-    compileSdkVersion 31
+    compileSdkVersion 33
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

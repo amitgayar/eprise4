@@ -1,19 +1,44 @@
 import 'dart:async';
 import 'dart:convert';
+// import 'package:alice/alice.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:eprise4/my_awesome_notifications.dart';
+import 'package:eprise4/my_webview.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 import 'message.dart';
 import 'message_list.dart';
 import 'permissions.dart';
 import 'token_monitor.dart';
+import 'package:logger/logger.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'dart:io';
+
+
+
+Logger logPrint = Logger();
+// Alice alice = Alice(showNotification: true);
+
+
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // await Firebase.initializeApp(
   //   options:DefaultFirebaseOptions.currentPlatform
   // );
+  await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: 'AIzaSyAanlRaqhygGoWmWP2pPQfv_88bPjedIwo',
+        appId: '1:922883262952:android:2f1fdff5cd1764acf5bc5d',
+        messagingSenderId: '922883262952',
+        projectId: 'eprise4-124de',
+        // databaseURL: 'https://react-native-firebase-testing.firebaseio.com',
+        // storageBucket: 'react-native-firebase-testing.appspot.com',
+      )
+  );
 }
 
 /// Create a [AndroidNotificationChannel] for heads up notifications
@@ -24,6 +49,19 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  AwesomeNotifications().initialize(
+    'resource://mipmap/tm',
+    [
+      NotificationChannel(
+        channelKey: 'basic_channel',
+        channelName: 'Basic Notifications',
+        // defaultColor: Colors.teal,
+        importance: NotificationImportance.High,
+        channelShowBadge: true, channelDescription: '',
+      ),
+    ], debug: true
+  );
+
   await Firebase.initializeApp(
         options: const FirebaseOptions(
       apiKey: 'AIzaSyAanlRaqhygGoWmWP2pPQfv_88bPjedIwo',
@@ -72,6 +110,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // navigatorKey: alice.getNavigatorKey(),
       title: 'Messaging Example App',
       theme: ThemeData.dark(),
       routes: {
@@ -81,6 +120,8 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+
 
 // Crude counter to make messages unique
 int _messageCount = 0;
@@ -113,21 +154,40 @@ class _Application extends State<Application> {
   @override
   void initState() {
     super.initState();
+    ///webview
+    if (Platform.isAndroid) WebView.platform = AndroidWebView();
+    ///firebase messaging
     FirebaseMessaging.instance
         .getInitialMessage()
         .then((RemoteMessage? message) {
+      logPrint.w("FirebaseMessaging.instance.getInitialMessage : $message ");
       if (message != null) {
-        Navigator.pushNamed(
-          context,
-          '/message',
-          arguments: MessageArguments(message, true),
-        );
+        // Navigator.pushNamed(
+        //   context,
+        //   '/message',
+        //   arguments: MessageArguments(message, true),
+        // );
       }
     });
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      logPrint.w("FirebaseMessaging.onMessage.listen : ${message.data} ");
+
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(notification?.body??'', textAlign: TextAlign.center,style: TextStyle(color: Colors.white),),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.black87,
+            duration: Duration(seconds: 15),
+            margin: EdgeInsets.fromLTRB(20,0,20,500),
+            elevation: 20.0,
+              dismissDirection:DismissDirection.horizontal
+          ));
+      createPlantFoodNotification();
+      // createWaterReminderNotification(message);
       if (notification != null && android != null && !kIsWeb) {
         // flutterLocalNotificationsPlugin.show(
         //   notification.hashCode,
@@ -147,18 +207,26 @@ class _Application extends State<Application> {
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('A new onMessageOpenedApp event was published!');
-      Navigator.pushNamed(
-        context,
-        '/message',
-        arguments: MessageArguments(message, true),
-      );
+      logPrint.w("A new onMessageOpenedApp event was published\nFirebaseMessaging.onMessage.listen : ${message.notification?.body} ");
+
+      // Navigator.pushNamed(
+      //   context,
+      //   '/message',
+      //   arguments: MessageArguments(message, true),
+      // );
     });
+  }
+
+
+  Future myAPIHit() async{
+    Response res = await http.get(Uri.parse("https://coolboxapi.indicold.in/masterData/getColourCodeList"));
+    logPrint.w('my api hit : res : ${res.body}');
+    // alice.onHttpResponse(res);
   }
 
   Future<void> sendPushMessage() async {
     if (_token == null) {
-      print('Unable to send FCM message, no token exists.');
+      logPrint.w("Unable to send FCM message, no token exists ");
       return;
     }
 
@@ -170,9 +238,10 @@ class _Application extends State<Application> {
         },
         body: constructFCMPayload(_token),
       );
-      print('FCM request for device sent!');
+      logPrint.w("FCM request for device sent ");
+
     } catch (e) {
-      print(e);
+      logPrint.w("error : $e ");
     }
   }
 
@@ -180,22 +249,18 @@ class _Application extends State<Application> {
     switch (value) {
       case 'subscribe':
         {
-          print(
-            'FlutterFire Messaging Example: Subscribing to topic "fcm_test".',
-          );
+          logPrint.w("FlutterFire Messaging Example: Subscribing to topic fcm_test");
           await FirebaseMessaging.instance.subscribeToTopic('fcm_test');
-          print(
-            'FlutterFire Messaging Example: Subscribing to topic "fcm_test" successful.',
-          );
+          logPrint.w("FlutterFire Messaging Example: Subscribing to topic fcm_test successful. ");
         }
         break;
       case 'unsubscribe':
         {
-          print(
+          logPrint.w(
             'FlutterFire Messaging Example: Unsubscribing from topic "fcm_test".',
           );
           await FirebaseMessaging.instance.unsubscribeFromTopic('fcm_test');
-          print(
+          logPrint.w(
             'FlutterFire Messaging Example: Unsubscribing from topic "fcm_test" successful.',
           );
         }
@@ -204,11 +269,11 @@ class _Application extends State<Application> {
         {
           if (defaultTargetPlatform == TargetPlatform.iOS ||
               defaultTargetPlatform == TargetPlatform.macOS) {
-            print('FlutterFire Messaging Example: Getting APNs token...');
+            logPrint.w('FlutterFire Messaging Example: Getting APNs token...');
             String? token = await FirebaseMessaging.instance.getAPNSToken();
-            print('FlutterFire Messaging Example: Got APNs token: $token');
+            logPrint.w('FlutterFire Messaging Example: Got APNs token: $token');
           } else {
-            print(
+            logPrint.w(
               'FlutterFire Messaging Example: Getting an APNs token is only supported on iOS and macOS platforms.',
             );
           }
@@ -247,10 +312,10 @@ class _Application extends State<Application> {
         ],
       ),
       floatingActionButton: Builder(
-        builder: (context) => FloatingActionButton(
-          onPressed: sendPushMessage,
+        builder: (context) => const FloatingActionButton(
+          onPressed: createPlantFoodNotification,
           backgroundColor: Colors.white,
-          child: const Icon(Icons.send),
+          child: Icon(Icons.send),
         ),
       ),
       body: SingleChildScrollView(
@@ -260,6 +325,7 @@ class _Application extends State<Application> {
             MetaCard(
               'FCM Token',
               TokenMonitor((token) {
+                logPrint.w("FCM token : $token");
                 _token = token;
                 return token == null
                     ? const CircularProgressIndicator()
@@ -267,6 +333,31 @@ class _Application extends State<Application> {
               }),
             ),
             MetaCard('Message Stream', MessageList()),
+            ElevatedButton(onPressed: (){
+              // ScaffoldMessenger.of(context).showSnackBar(
+              //     SnackBar(
+              //         content: Column(
+              //           mainAxisSize: MainAxisSize.min,
+              //           children: const [
+              //             Text(
+              //               'My Custom message must be here!!!',
+              //               textAlign: TextAlign.center,
+              //               // style: TextStyle(color: Colors.white),
+              //             )
+              //           ],
+              //         ),
+              //         behavior: SnackBarBehavior.floating,
+              //         // backgroundColor: Colors.black87,
+              //         duration: Duration(seconds: 45),
+              //         // margin: EdgeInsets.fromLTRB(20,0,20,650),
+              //         elevation: 20.0,
+              //         dismissDirection:DismissDirection.horizontal
+              //     ));
+              Navigator.push(context, PageRouteBuilder(pageBuilder: (a,s,f)=> const WebViewExample()));
+            }, child: const Text(
+              'Show SnackBar',
+              // 'Show WebView',
+            )),
           ],
         ),
       ),

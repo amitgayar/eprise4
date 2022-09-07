@@ -3,6 +3,8 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
+import 'main.dart';
+
 /// Manages & returns the users FCM token.
 ///
 /// Also monitors token refreshes and updates state.
@@ -21,7 +23,7 @@ class _TokenMonitor extends State<TokenMonitor> {
   late Stream<String> _tokenStream;
 
   void setToken(String? token) {
-    print('FCM Token: $token');
+    logPrint.w('FCM Token: $token');
     setState(() {
       _token = token;
     });
@@ -30,10 +32,7 @@ class _TokenMonitor extends State<TokenMonitor> {
   @override
   void initState() {
     super.initState();
-    FirebaseMessaging.instance
-        .getToken(
-        vapidKey: 'BGpdLRsMJKvFDD9odfPk92uBg-JbQbyoiZdah0XlUyrjG4SDgUsE1iC_kdRgt4Kn0CO7K3RTswPZt61NNuO0XoA'
-    )
+    FirebaseMessaging.instance.getToken(vapidKey: 'BGpdLRsMJKvFDD9odfPk92uBg-JbQbyoiZdah0XlUyrjG4SDgUsE1iC_kdRgt4Kn0CO7K3RTswPZt61NNuO0XoA')
         .then(setToken);
     _tokenStream = FirebaseMessaging.instance.onTokenRefresh;
     _tokenStream.listen(setToken);
