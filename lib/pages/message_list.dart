@@ -1,8 +1,8 @@
 
+import 'package:eprise4/pages/message.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
-import 'message.dart';
 
 /// Listens for incoming foreground messages and displays them in a list.
 class MessageList extends StatefulWidget {

@@ -20,8 +20,6 @@ Future getData() async {
     }
   }
 
-
-
 class DataRepository {
   DataRepository() {
     getData();
@@ -72,7 +70,7 @@ class DataListState   {
 }
 
 class DataListCubit extends Cubit<DataListState> {
-  DataListCubit(this.dataRepository) : super(DataListState([])) {
+  DataListCubit(this.dataRepository) : super(const DataListState([])) {
     loadList();
   }
   final DataRepository dataRepository;

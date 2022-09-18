@@ -1,9 +1,10 @@
 // ignore_for_file: require_trailing_commas
 
+import 'package:eprise4/app_constants/constants.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
-import 'main.dart';
+import '../main.dart';
 
 /// Manages & returns the users FCM token.
 ///
